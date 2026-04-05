@@ -22,8 +22,6 @@
             position: relative;
             overflow-x: hidden;
         }
-        
-        /* Звёзды */
         .stars {
             position: fixed;
             top: 0;
@@ -46,8 +44,6 @@
             0% { opacity: 0; transform: scale(0.8);}
             100% { opacity: 1; transform: scale(1.2);}
         }
-        
-        /* Кит */
         .whale-wrapper {
             position: fixed;
             bottom: 5%;
@@ -69,8 +65,6 @@
             95% { left: -20%; bottom: 8%; transform: scaleX(-1);}
             100% { left: -20%; bottom: 5%; transform: scaleX(1);}
         }
-        
-        /* Основная карточка */
         .wish-chat {
             position: relative;
             z-index: 10;
@@ -85,7 +79,6 @@
             flex-direction: column;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(66, 153, 225, 0.2);
         }
-        
         .header {
             text-align: center;
             margin-bottom: 1rem;
@@ -107,8 +100,6 @@
             color: #bbd9ff;
             margin-top: 6px;
         }
-        
-        /* Лента желаний */
         .messages-container {
             flex: 1;
             overflow-y: auto;
@@ -135,8 +126,6 @@
             margin-top: 5px;
             text-align: right;
         }
-        
-        /* Поле ввода */
         .input-area {
             display: flex;
             gap: 10px;
@@ -170,20 +159,17 @@
         .send-btn:hover {
             transform: scale(0.96);
         }
-        
         .empty-chat {
             text-align: center;
             color: #8e9eae;
             padding: 20px;
         }
-        
         footer {
             text-align: center;
             margin-top: 0.8rem;
             font-size: 0.65rem;
             color: #6c86a3;
         }
-        
         @media (max-width: 600px) {
             .wish-chat { padding: 1rem; height: 85vh; }
             .title { font-size: 1.4rem; }
@@ -213,11 +199,9 @@
         <div class="title">✨ Общий чат желаний</div>
         <div class="counter" id="wishCounter">✨ желаний: загрузка...</div>
     </div>
-    
     <div class="messages-container" id="messagesContainer">
         <div class="empty-chat">🐋 Загадай желание — и кит унесёт его в звёзды</div>
     </div>
-    
     <div class="input-area">
         <input type="text" class="wish-input" id="wishInput" placeholder="Напиши своё желание...">
         <button class="send-btn" id="sendBtn">✨ Загадать</button>
@@ -226,129 +210,120 @@
 </div>
 
 <script>
-    const SUPABASE_URL = "https://iiuahjmpszfcgtwapidt.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_iFYpqkv4D0qEOj4Dn1X9Nw_OH9d5Bji";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    
-    // Звёзды
-    const starsContainer = document.getElementById('starsContainer');
-    for (let i = 0; i < 250; i++) {
-        const star = document.createElement('div');
-        star.classList.add('star');
-        star.style.left = Math.random() * 100 + '%';
-        star.style.top = Math.random() * 100 + '%';
-        star.style.animationDelay = Math.random() * 5 + 's';
-        star.style.animationDuration = Math.random() * 2 + 1 + 's';
-        starsContainer.appendChild(star);
-    }
-    
-    let currentUser = null;
-    
-    // Получаем или создаём анонимного пользователя
-    async function getOrCreateUser() {
-        let userId = localStorage.getItem('wish_user_id');
-        if (userId) {
-            const { data } = await supabase.from('wishes_users').select('*').eq('id', userId).single();
+    (function() {
+        const SUPABASE_URL = "https://iiuahjmpszfcgtwapidt.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_iFYpqkv4D0qEOj4Dn1X9Nw_OH9d5Bji";
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // Звёзды
+        const starsContainer = document.getElementById('starsContainer');
+        for (let i = 0; i < 250; i++) {
+            const star = document.createElement('div');
+            star.classList.add('star');
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 5 + 's';
+            star.style.animationDuration = Math.random() * 2 + 1 + 's';
+            starsContainer.appendChild(star);
+        }
+        
+        let currentUser = null;
+        
+        async function getOrCreateUser() {
+            let userId = localStorage.getItem('wish_user_id');
+            if (userId) {
+                const { data } = await supabase.from('wishes_users').select('*').eq('id', userId).single();
+                if (data) {
+                    currentUser = data;
+                    return;
+                }
+            }
+            const { data, error } = await supabase.from('wishes_users').insert({}).select().single();
             if (data) {
                 currentUser = data;
-                return;
+                localStorage.setItem('wish_user_id', data.id);
             }
         }
-        // Создаём нового пользователя
-        const { data, error } = await supabase.from('wishes_users').insert({}).select().single();
-        if (data) {
-            currentUser = data;
-            localStorage.setItem('wish_user_id', data.id);
-        }
-    }
-    
-    // Загрузка желаний
-    async function loadWishes() {
-        const { data } = await supabase
-            .from('wishes')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(100);
         
-        const container = document.getElementById('messagesContainer');
-        const counterSpan = document.getElementById('wishCounter');
-        
-        if (!data || data.length === 0) {
-            container.innerHTML = '<div class="empty-chat">✨ Пока нет желаний. Будь первым!</div>';
-            counterSpan.innerHTML = `✨ желаний: 0`;
-            return;
-        }
-        
-        container.innerHTML = data.map(wish => `
-            <div class="wish-item">
-                <div class="wish-text">${escapeHtml(wish.text)}</div>
-                <div class="wish-meta">⭐ ${formatTime(wish.created_at)}</div>
-            </div>
-        `).join('');
-        
-        counterSpan.innerHTML = `✨ желаний: ${data.length}`;
-    }
-    
-    // Отправка желания
-    async function sendWish() {
-        const input = document.getElementById('wishInput');
-        const text = input.value.trim();
-        if (!text) {
-            alert("Напиши желание ✨");
-            return;
+        async function loadWishes() {
+            const { data } = await supabase
+                .from('wishes')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(100);
+            
+            const container = document.getElementById('messagesContainer');
+            const counterSpan = document.getElementById('wishCounter');
+            
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="empty-chat">✨ Пока нет желаний. Будь первым!</div>';
+                counterSpan.innerHTML = `✨ желаний: 0`;
+                return;
+            }
+            
+            container.innerHTML = data.map(wish => `
+                <div class="wish-item">
+                    <div class="wish-text">${escapeHtml(wish.text)}</div>
+                    <div class="wish-meta">⭐ ${formatTime(wish.created_at)}</div>
+                </div>
+            `).join('');
+            
+            counterSpan.innerHTML = `✨ желаний: ${data.length}`;
         }
         
-        if (!currentUser) {
-            alert("Ошибка: подождите, идёт загрузка...");
-            return;
+        async function sendWish() {
+            const input = document.getElementById('wishInput');
+            const text = input.value.trim();
+            if (!text) {
+                alert("Напиши желание ✨");
+                return;
+            }
+            if (!currentUser) {
+                alert("Ошибка: подождите, идёт загрузка...");
+                return;
+            }
+            const btn = document.getElementById('sendBtn');
+            btn.disabled = true;
+            btn.textContent = "🕯️ Отправляем...";
+            const { error } = await supabase.from('wishes').insert({
+                user_id: currentUser.id,
+                text: text
+            });
+            btn.disabled = false;
+            btn.textContent = "✨ Загадать";
+            if (error) {
+                console.error(error);
+                alert("❌ Ошибка: желание не отправилось. Попробуй ещё раз.");
+            } else {
+                alert("🐋✨ Желание уплыло к звёздам!");
+                input.value = '';
+                loadWishes();
+            }
         }
         
-        const btn = document.getElementById('sendBtn');
-        btn.disabled = true;
-        btn.textContent = "🕯️ Отправляем...";
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+        }
         
-        const { error } = await supabase.from('wishes').insert({
-            user_id: currentUser.id,
-            text: text
+        function formatTime(date) {
+            return new Date(date).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        document.getElementById('sendBtn').addEventListener('click', sendWish);
+        document.getElementById('wishInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendWish();
         });
         
-        btn.disabled = false;
-        btn.textContent = "✨ Загадать";
-        
-        if (error) {
-            console.error(error);
-            alert("❌ Ошибка: желание не отправилось. Попробуй ещё раз.");
-        } else {
-            alert("🐋✨ Желание уплыло к звёздам!");
-            input.value = '';
+        getOrCreateUser().then(() => {
             loadWishes();
-        }
-    }
-    
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
-    }
-    
-    function formatTime(date) {
-        return new Date(date).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
-    }
-    
-    document.getElementById('sendBtn').addEventListener('click', sendWish);
-    document.getElementById('wishInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendWish();
-    });
-    
-    // Инициализация
-    getOrCreateUser().then(() => {
-        loadWishes();
-        // Подписка на новые желания
-        supabase.channel('wishes_channel')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'wishes' }, () => {
-                loadWishes();
-            })
-            .subscribe();
-    });
+            supabase.channel('wishes_channel')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'wishes' }, () => {
+                    loadWishes();
+                })
+                .subscribe();
+        });
+    })();
 </script>
 </body>
 </html>

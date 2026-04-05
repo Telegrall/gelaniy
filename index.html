@@ -9,7 +9,6 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            user-select: none;
         }
 
         body {
@@ -18,11 +17,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, 'Montserrat', sans-serif;
+            font-family: 'Segoe UI', 'Poppins', system-ui, sans-serif;
             overflow-x: hidden;
             position: relative;
         }
 
+        /* Звёздное небо — фикс */
         .stars {
             position: fixed;
             top: 0;
@@ -37,6 +37,8 @@
             position: absolute;
             background-color: #fff;
             border-radius: 50%;
+            width: 2px;
+            height: 2px;
             opacity: 0;
             animation: twinkle 3s infinite alternate;
         }
@@ -66,6 +68,7 @@
             100% { opacity: 0; transform: translateX(-300px) translateY(300px) rotate(25deg);}
         }
 
+        /* Кит */
         .whale-wrapper {
             position: fixed;
             bottom: 8%;
@@ -90,6 +93,7 @@
             100% { left: -20%; bottom: 5%; transform: scaleX(1);}
         }
 
+        /* Карточка желаний */
         .wish-card {
             position: relative;
             z-index: 20;
@@ -118,7 +122,6 @@
             font-size: 1rem;
             color: #bdd4ff;
             margin-bottom: 1.8rem;
-            font-weight: 300;
         }
 
         .wish-input {
@@ -130,7 +133,6 @@
             font-size: 1.1rem;
             color: white;
             font-family: inherit;
-            resize: vertical;
             margin-bottom: 1.2rem;
         }
 
@@ -227,78 +229,47 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // ═══════════════════════════════════════════════════════════════════════════
-    // 1. SUPABASE (те же ключи, что в мессенджере)
-    // ═══════════════════════════════════════════════════════════════════════════
     const SUPABASE_URL = "https://iiuahjmpszfcgtwapidt.supabase.co";
     const SUPABASE_KEY = "sb_publishable_iFYpqkv4D0qEOj4Dn1X9Nw_OH9d5Bji";
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    
-    // ═══════════════════════════════════════════════════════════════════════════
-    // 2. DEEPSEEK API (ключ тот же, что в мессенджере)
-    // ═══════════════════════════════════════════════════════════════════════════
     const DEEPSEEK_KEY = "sk-671836b8f14d47ec9db7c95d19400285";
-    
-    // ═══════════════════════════════════════════════════════════════════════════
-    // 3. ЗВЁЗДНОЕ НЕБО (мерцающие + падающие)
-    // ═══════════════════════════════════════════════════════════════════════════
+
+    // Звёзды (принудительное создание, чтобы точно были)
     const starsContainer = document.getElementById('starsContainer');
-    for (let i = 0; i < 210; i++) {
+    for (let i = 0; i < 300; i++) {
         const star = document.createElement('div');
         star.classList.add('star');
-        const size = Math.random() * 3 + 1.2;
+        const size = Math.random() * 3 + 1;
         star.style.width = size + 'px';
         star.style.height = size + 'px';
         star.style.left = Math.random() * 100 + '%';
-        star.style.top = Math.random() * 90 + '%';
+        star.style.top = Math.random() * 100 + '%';
         star.style.animationDelay = Math.random() * 5 + 's';
-        star.style.animationDuration = Math.random() * 2 + 1.5 + 's';
+        star.style.animationDuration = Math.random() * 2 + 1 + 's';
         starsContainer.appendChild(star);
     }
-    for (let s = 0; s < 12; s++) {
+    for (let s = 0; s < 15; s++) {
         const shooting = document.createElement('div');
         shooting.classList.add('shooting-star');
-        shooting.style.left = Math.random() * 70 + 20 + '%';
-        shooting.style.top = Math.random() * 30 + '%';
+        shooting.style.left = Math.random() * 80 + 10 + '%';
+        shooting.style.top = Math.random() * 40 + '%';
         shooting.style.animationDelay = Math.random() * 8 + 's';
-        shooting.style.animationDuration = Math.random() * 3 + 2.5 + 's';
+        shooting.style.animationDuration = Math.random() * 3 + 2 + 's';
         starsContainer.appendChild(shooting);
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════
-    // 4. СЧЁТЧИК ЖЕЛАНИЙ
-    // ═══════════════════════════════════════════════════════════════════════════
+
     async function updateCounter() {
-        try {
-            const { count, error } = await supabase
-                .from('wishes')
-                .select('*', { count: 'exact', head: true });
-            if (!error) {
-                document.getElementById('wishCounter').innerHTML = `✨ уже загадано: ${count} желаний`;
-            } else {
-                document.getElementById('wishCounter').innerHTML = `✨ уже загадано: много ✨`;
-            }
-        } catch(e) {
-            document.getElementById('wishCounter').innerHTML = `✨ уже загадано: много ✨`;
-        }
+        const { count } = await supabase.from('wishes').select('*', { count: 'exact', head: true });
+        document.getElementById('wishCounter').innerHTML = `✨ уже загадано: ${count || 'много'} желаний`;
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════
-    // 5. ОТПРАВКА ЖЕЛАНИЯ С DEEPSEEK МОДЕРАЦИЕЙ
-    // ═══════════════════════════════════════════════════════════════════════════
+
     async function checkWithDeepSeek(text) {
         const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${DEEPSEEK_KEY}`,
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Authorization': `Bearer ${DEEPSEEK_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 model: 'deepseek-chat',
-                messages: [
-                    { role: 'system', content: 'Ты — модератор желаний. Если в тексте есть мат, оскорбления, завуалированная нецензурная лексика или токсичность, ответь только словом "toxic". Если всё чисто — ответь только словом "clean".' },
-                    { role: 'user', content: text }
-                ],
+                messages: [{ role: 'system', content: 'Ответь только словом "toxic" или "clean".' }, { role: 'user', content: text }],
                 temperature: 0.1,
                 max_tokens: 10
             })
@@ -307,60 +278,34 @@
         const reply = data.choices[0].message.content.trim().toLowerCase();
         return reply === 'toxic';
     }
-    
+
     async function sendWish() {
-        const wishTextarea = document.getElementById('wishText');
-        let wish = wishTextarea.value.trim();
-        if (!wish) {
-            alert("Напиши своё желание ✨");
-            return;
-        }
-        
-        // Блокируем кнопку на время проверки
+        const wish = document.getElementById('wishText').value.trim();
+        if (!wish) return alert("Напиши желание ✨");
         const btn = document.getElementById('sendWishBtn');
         btn.disabled = true;
         btn.textContent = "🕯️ Проверяем...";
-        
-        let isToxic = false;
-        try {
-            isToxic = await checkWithDeepSeek(wish);
-        } catch(e) {
-            console.error("DeepSeek error:", e);
-            alert("Не удалось проверить желание, попробуй ещё раз.");
+        let toxic = false;
+        try { toxic = await checkWithDeepSeek(wish); } catch(e) { console.warn(e); }
+        if (toxic) {
+            alert("❌ Желание должно быть добрым. Переформулируй ✨");
             btn.disabled = false;
             btn.textContent = "🌠 Загадать";
             return;
         }
-        
-        if (isToxic) {
-            alert("❌ Желание должно быть добрым и светлым. Переформулируй, и звёзды тебя услышат ✨");
-            btn.disabled = false;
-            btn.textContent = "🌠 Загадать";
-            return;
-        }
-        
-        // Сохраняем в Supabase
-        const { error } = await supabase
-            .from('wishes')
-            .insert([{ text: wish, is_approved: true, is_toxic: false }]);
-        
+        const { error } = await supabase.from('wishes').insert([{ text: wish, is_approved: true, is_toxic: false }]);
         btn.disabled = false;
         btn.textContent = "🌠 Загадать";
-        
-        if (error) {
-            console.error(error);
-            alert("Ошибка: желание не отправилось, но кит уже знает о нём. Попробуй ещё раз.");
-        } else {
-            alert("🐋✨ Желание уплыло к звёздам! Оно обязательно сбудется.");
-            wishTextarea.value = "";
+        if (error) alert("Ошибка, попробуй ещё раз");
+        else {
+            alert("🐋✨ Желание уплыло к звёздам!");
+            document.getElementById('wishText').value = '';
             updateCounter();
         }
     }
-    
+
     document.getElementById('sendWishBtn').addEventListener('click', sendWish);
     updateCounter();
-    
-    console.log("🐋 Синий кит плывёт по небу — загадывай желания смелее!");
 </script>
 </body>
 </html>

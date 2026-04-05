@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Исполнитель желаний — загадай мечту</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(ellipse at 30% 40%, #0a0f2a, #03050b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, 'Montserrat', sans-serif;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            background-color: #fff;
+            border-radius: 50%;
+            opacity: 0;
+            animation: twinkle 3s infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0; transform: scale(0.8);}
+            100% { opacity: 1; transform: scale(1.2);}
+        }
+
+        .shooting-star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            box-shadow: 0 0 8px 2px rgba(255, 255, 255, 0.8);
+            opacity: 0;
+            top: 0;
+            left: 0;
+            transform: rotate(25deg);
+            animation: shoot 4s linear infinite;
+        }
+
+        @keyframes shoot {
+            0% { opacity: 0; transform: translateX(0) translateY(0) rotate(25deg);}
+            10% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; transform: translateX(-300px) translateY(300px) rotate(25deg);}
+        }
+
+        .whale-wrapper {
+            position: fixed;
+            bottom: 8%;
+            left: -20%;
+            width: 320px;
+            z-index: 12;
+            pointer-events: none;
+            animation: swim 24s ease-in-out infinite;
+            filter: drop-shadow(0 0 12px rgba(0, 150, 255, 0.4));
+        }
+
+        .whale-svg {
+            width: 100%;
+            opacity: 0.9;
+        }
+
+        @keyframes swim {
+            0% { left: -20%; bottom: 5%; transform: scaleX(1);}
+            45% { left: 70%; bottom: 12%; transform: scaleX(1);}
+            50% { left: 72%; bottom: 12%; transform: scaleX(-1);}
+            95% { left: -20%; bottom: 8%; transform: scaleX(-1);}
+            100% { left: -20%; bottom: 5%; transform: scaleX(1);}
+        }
+
+        .wish-card {
+            position: relative;
+            z-index: 20;
+            background: rgba(10, 20, 45, 0.55);
+            backdrop-filter: blur(14px);
+            border-radius: 48px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 580px;
+            margin: 2rem auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(66, 153, 225, 0.2);
+            text-align: center;
+        }
+
+        .title {
+            font-size: 1.8rem;
+            font-weight: 500;
+            background: linear-gradient(135deg, #C0E0FF, #7CB9FF);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .sub {
+            font-size: 1rem;
+            color: #bdd4ff;
+            margin-bottom: 1.8rem;
+            font-weight: 300;
+        }
+
+        .wish-input {
+            width: 100%;
+            background: rgba(15, 25, 55, 0.8);
+            border: 1px solid #2c4875;
+            border-radius: 64px;
+            padding: 1rem 1.5rem;
+            font-size: 1.1rem;
+            color: white;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 1.2rem;
+        }
+
+        .wish-input:focus {
+            outline: none;
+            border-color: #5b9eff;
+            box-shadow: 0 0 12px rgba(91, 158, 255, 0.4);
+        }
+
+        .btn-wish {
+            background: linear-gradient(95deg, #2b6ef0, #1a4fcf);
+            border: none;
+            border-radius: 60px;
+            padding: 0.8rem 2rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+            margin-bottom: 1.2rem;
+        }
+
+        .btn-wish:hover {
+            background: linear-gradient(95deg, #3e7cf5, #1f56dd);
+            transform: scale(0.98);
+        }
+
+        .counter {
+            background: rgba(0, 0, 0, 0.45);
+            border-radius: 80px;
+            padding: 0.5rem 1.2rem;
+            display: inline-block;
+            font-size: 0.9rem;
+            color: #bbd9ff;
+        }
+
+        .info-text {
+            font-size: 0.75rem;
+            color: #7e95c0;
+            margin-top: 1rem;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 12px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 10px;
+            color: #446;
+            pointer-events: none;
+            z-index: 22;
+        }
+
+        @media (max-width: 640px) {
+            .whale-wrapper { width: 220px; bottom: 5%; left: -25%;}
+            .wish-card { padding: 1.5rem; }
+            .title { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="stars" id="starsContainer"></div>
+<div class="whale-wrapper">
+    <svg class="whale-svg" viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M30 65 L10 75 L20 85 L45 80 L75 92 L110 95 L145 88 L170 78 L185 68 L190 58 L175 52 L155 55 L130 58 L110 60 L85 58 L60 55 L40 58 L30 65Z" fill="#3B82F6" stroke="#BFDBFE" stroke-width="1.5"/>
+        <path d="M30 65 L10 75 L20 85 L45 80 L75 92 L110 95 L145 88 L170 78 L185 68 L190 58 L175 52 L155 55 L130 58 L110 60 L85 58 L60 55 L40 58 L30 65Z" fill="url(#whaleGrad)" opacity="0.8"/>
+        <circle cx="162" cy="64" r="4" fill="white"/>
+        <circle cx="163" cy="63" r="1.8" fill="#0A1128"/>
+        <path d="M50 78 L70 80 L90 81" stroke="#BFDBFE" stroke-width="2" fill="none"/>
+        <defs>
+            <linearGradient id="whaleGrad" x1="0" y1="0" x2="1" y2="0.2">
+                <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.95"/>
+                <stop offset="100%" stop-color="#1E3A8A" stop-opacity="0.9"/>
+            </linearGradient>
+        </defs>
+    </svg>
+</div>
+
+<div class="wish-card">
+    <div class="title">✨ Желания — вещь,<br> в которую поверит каждый</div>
+    <div class="sub">🐋 загадай — и кит унесёт мечту в звёзды</div>
+    
+    <textarea class="wish-input" id="wishText" rows="2" placeholder="Напиши своё желание..."></textarea>
+    <button class="btn-wish" id="sendWishBtn">🌠 Загадать</button>
+    
+    <div class="counter" id="wishCounter">✨ уже загадано: загрузка...</div>
+    <div class="info-text">анонимно · без регистрации · мечты сбываются</div>
+</div>
+
+<footer>⭐ доверься звёздам и синему киту</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 1. SUPABASE (те же ключи, что в мессенджере)
+    // ═══════════════════════════════════════════════════════════════════════════
+    const SUPABASE_URL = "https://iiuahjmpszfcgtwapidt.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_iFYpqkv4D0qEOj4Dn1X9Nw_OH9d5Bji";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 2. DEEPSEEK API (ключ тот же, что в мессенджере)
+    // ═══════════════════════════════════════════════════════════════════════════
+    const DEEPSEEK_KEY = "sk-671836b8f14d47ec9db7c95d19400285";
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 3. ЗВЁЗДНОЕ НЕБО (мерцающие + падающие)
+    // ═══════════════════════════════════════════════════════════════════════════
+    const starsContainer = document.getElementById('starsContainer');
+    for (let i = 0; i < 210; i++) {
+        const star = document.createElement('div');
+        star.classList.add('star');
+        const size = Math.random() * 3 + 1.2;
+        star.style.width = size + 'px';
+        star.style.height = size + 'px';
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 90 + '%';
+        star.style.animationDelay = Math.random() * 5 + 's';
+        star.style.animationDuration = Math.random() * 2 + 1.5 + 's';
+        starsContainer.appendChild(star);
+    }
+    for (let s = 0; s < 12; s++) {
+        const shooting = document.createElement('div');
+        shooting.classList.add('shooting-star');
+        shooting.style.left = Math.random() * 70 + 20 + '%';
+        shooting.style.top = Math.random() * 30 + '%';
+        shooting.style.animationDelay = Math.random() * 8 + 's';
+        shooting.style.animationDuration = Math.random() * 3 + 2.5 + 's';
+        starsContainer.appendChild(shooting);
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 4. СЧЁТЧИК ЖЕЛАНИЙ
+    // ═══════════════════════════════════════════════════════════════════════════
+    async function updateCounter() {
+        try {
+            const { count, error } = await supabase
+                .from('wishes')
+                .select('*', { count: 'exact', head: true });
+            if (!error) {
+                document.getElementById('wishCounter').innerHTML = `✨ уже загадано: ${count} желаний`;
+            } else {
+                document.getElementById('wishCounter').innerHTML = `✨ уже загадано: много ✨`;
+            }
+        } catch(e) {
+            document.getElementById('wishCounter').innerHTML = `✨ уже загадано: много ✨`;
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 5. ОТПРАВКА ЖЕЛАНИЯ С DEEPSEEK МОДЕРАЦИЕЙ
+    // ═══════════════════════════════════════════════════════════════════════════
+    async function checkWithDeepSeek(text) {
+        const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${DEEPSEEK_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'deepseek-chat',
+                messages: [
+                    { role: 'system', content: 'Ты — модератор желаний. Если в тексте есть мат, оскорбления, завуалированная нецензурная лексика или токсичность, ответь только словом "toxic". Если всё чисто — ответь только словом "clean".' },
+                    { role: 'user', content: text }
+                ],
+                temperature: 0.1,
+                max_tokens: 10
+            })
+        });
+        const data = await response.json();
+        const reply = data.choices[0].message.content.trim().toLowerCase();
+        return reply === 'toxic';
+    }
+    
+    async function sendWish() {
+        const wishTextarea = document.getElementById('wishText');
+        let wish = wishTextarea.value.trim();
+        if (!wish) {
+            alert("Напиши своё желание ✨");
+            return;
+        }
+        
+        // Блокируем кнопку на время проверки
+        const btn = document.getElementById('sendWishBtn');
+        btn.disabled = true;
+        btn.textContent = "🕯️ Проверяем...";
+        
+        let isToxic = false;
+        try {
+            isToxic = await checkWithDeepSeek(wish);
+        } catch(e) {
+            console.error("DeepSeek error:", e);
+            alert("Не удалось проверить желание, попробуй ещё раз.");
+            btn.disabled = false;
+            btn.textContent = "🌠 Загадать";
+            return;
+        }
+        
+        if (isToxic) {
+            alert("❌ Желание должно быть добрым и светлым. Переформулируй, и звёзды тебя услышат ✨");
+            btn.disabled = false;
+            btn.textContent = "🌠 Загадать";
+            return;
+        }
+        
+        // Сохраняем в Supabase
+        const { error } = await supabase
+            .from('wishes')
+            .insert([{ text: wish, is_approved: true, is_toxic: false }]);
+        
+        btn.disabled = false;
+        btn.textContent = "🌠 Загадать";
+        
+        if (error) {
+            console.error(error);
+            alert("Ошибка: желание не отправилось, но кит уже знает о нём. Попробуй ещё раз.");
+        } else {
+            alert("🐋✨ Желание уплыло к звёздам! Оно обязательно сбудется.");
+            wishTextarea.value = "";
+            updateCounter();
+        }
+    }
+    
+    document.getElementById('sendWishBtn').addEventListener('click', sendWish);
+    updateCounter();
+    
+    console.log("🐋 Синий кит плывёт по небу — загадывай желания смелее!");
+</script>
+</body>
+</html>
